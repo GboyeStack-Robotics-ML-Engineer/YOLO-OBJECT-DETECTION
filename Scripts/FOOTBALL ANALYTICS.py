@@ -1,12 +1,12 @@
 import cv2
-#from IPython import display
+from IPython import display
 import numpy as np
 
-#from IPython.display import display, Image
-#import matplotlib.pyplot as plt
+from IPython.display import display, Image
+import matplotlib.pyplot as plt
 import time
 import ultralytics
-#ultralytics.checks()
+ultralytics.checks()
 from ultralytics import YOLO
 import time
 
@@ -19,7 +19,6 @@ if not cap.isOpened():
  print("Cannot open camera")
  exit()
  
-#frames=np.hstack([frame for ret,frame in cap.read() if cap.read()[0]])
 while True:
 
    ret, frame = cap.read()   
@@ -30,9 +29,7 @@ while True:
    detections=model.predict(frame)
    
    for detection in detections:
-      #   print(detection.boxes.data)
-      #   print(detection.boxes.cls)
-      #   print(detection.boxes.conf)
+     
         for box in detection.boxes.data:
             
             (startX, startY, endX, endY,conf,cls) = box.cpu().numpy().astype(int).tolist()
@@ -43,10 +40,8 @@ while True:
                 cv2.putText(frame, text.format(model.names[cls]), (startX, startY),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
             else:
                 break
-        #detection.show()
-   cv2.imshow('Video Stream',frame)
- 
-   
+        
+   cv2.imshow('Video Stream',frame)  
    if cv2.waitKey(1) == ord('q'):
       break
    
