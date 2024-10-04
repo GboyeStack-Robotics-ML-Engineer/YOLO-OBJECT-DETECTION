@@ -24,7 +24,7 @@ while True:
 
    ret, frame = cap.read()   
    if not ret:
-      print("Can't receive frame (stream end?). Exiting ...")
+      print("Can't receive frame (stream end?) and end of frame reached. Exiting ...")
       break
    
    detections=model.predict(frame)
