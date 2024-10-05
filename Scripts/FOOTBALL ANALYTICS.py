@@ -34,9 +34,12 @@ class FootBallDetect:
       self.detections=None
       self.video_path=None
       self.model=None
-      self.box_annotator = sv.BoxAnnotator()
+      self.box_annotator = sv.EllipseAnnotator()
       self.label_annotator = sv.LabelAnnotator()
-      
+      self.triangle_annotator = sv.TriangleAnnotator()
+      self.ellipse_annotator = sv.EllipseAnnotator()
+
+
       
    def callback(image_slice: np.ndarray) -> sv.Detections:
     result = model.predict(image_slice)[0]
@@ -80,9 +83,7 @@ class FootBallDetect:
          exit()
       
       if save:
-            
-            
-            
+         
             size=(width,height)
             
             if save_dir is None:
@@ -149,12 +150,17 @@ class FootBallDetect:
                      in zip(detections['class_name'], detections.confidence)
                   ]
 
-      
-         annotated_image = self.box_annotator.annotate(
-                                          scene=frame, detections=detections)
+         annotated_frame =self.triangle_annotator.annotate(
+                              scene=frame.copy(),
+                              detections=detections)
+         
          annotated_image = self.label_annotator.annotate(
                                           scene=annotated_image, detections=detections, labels=labels)
-
+         
+         annotated_frame = self.ellipse_annotator.annotate(
+                                          scene=annotated_image,
+                                          detections=detections)
+         
          if save:
             result.write(annotated_image)        
          if display:
