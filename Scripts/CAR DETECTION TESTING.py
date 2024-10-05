@@ -159,7 +159,6 @@ class CarDetect:
             cv2.imshow('Video Stream',annotated_image)
                
          if cv2.waitKey(1) == ord('q'):
-         
             break
    
 detector=CarDetect()
