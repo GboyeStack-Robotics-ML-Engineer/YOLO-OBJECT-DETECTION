@@ -1,7 +1,6 @@
 import cv2
 from IPython import display
 import numpy as np
-
 from IPython.display import display, Image
 import matplotlib.pyplot as plt
 import time
@@ -10,38 +9,165 @@ ultralytics.checks()
 from ultralytics import YOLO
 import time
 
+import supervision as sv
+import warnings
+import os
+
 WEIGTH_PATH=r'Weights\FootBallAnalytics.pt'
 VIDEO_PATH=r'Videos\VILLARREAL CF 1 - 5 FC BARCELONA _ RESUMEN LALIGA EA SPORTS.mp4'
+
+
 model=YOLO(WEIGTH_PATH).to('cuda')
 cap = cv2.VideoCapture(VIDEO_PATH)
+
 text="{}"
 if not cap.isOpened():
  print("Cannot open camera")
  exit()
  
-while True:
 
-   ret, frame = cap.read()   
-   if not ret:
-      print("Can't receive frame (stream end?). Exiting ...")
-      break
+class FootBallDetect:
+   def __init__(self):
+      self.frame=None
+      self.ret=None
+      self.detections=None
+      self.video_path=None
+      self.model=None
+      self.box_annotator = sv.BoxAnnotator()
+      self.label_annotator = sv.LabelAnnotator()
+      
+      
+   def callback(image_slice: np.ndarray) -> sv.Detections:
+    result = model.predict(image_slice)[0]
+    return sv.Detections.from_ultralytics(result)
+      
+   def InferenceSlicer(self,model,frame):
+      
+      slicer = sv.InferenceSlicer(callback =self.callback)
+      
+      detections=slicer(frame)
+      
+      return detections
    
-   detections=model.predict(frame)
+   def get_default_save_path(self):
+      
+      default_dir=f"Results\{os.path.basename(__file__).split('.py')[0]}\Runs"
+            
+      if os.path.exists(default_dir):
+         files_in_dir=os.listdir(default_dir)
+         path=os.path.join(default_dir,f"Results_{len(files_in_dir)+1}.avi")
+         
+      elif not os.path.exists(default_dir):
+         os.makedirs(default_dir)
+         path=os.path.join(default_dir,f'Results_1.avi')
+      
+      return path
+      
+      
+   def detect (self,video_path,model,use_slicer=False,track=False,tracker=sv.ByteTrack(),save_dir=None,save=True,display=False):
+      
+      self.model=model
+      self.video_path=video_path
    
-   for detection in detections:
-     
-        for box in detection.boxes.data:
+      cap = cv2.VideoCapture(self.video_path)
+      
+      width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+      height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+      
+      if not cap.isOpened():
+         print("Cannot open camera")
+         exit()
+      
+      if save:
             
-            (startX, startY, endX, endY,conf,cls) = box.cpu().numpy().astype(int).tolist()
             
-            if cls>=0.7:
             
-                cv2.rectangle(frame, (startX, startY), (endX, endY),(0, 128, 0), 1)
-                cv2.putText(frame, text.format(model.names[cls]), (startX, startY),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
-            else:
-                break
-        
-   cv2.imshow('Video Stream',frame)  
-   if cv2.waitKey(1) == ord('q'):
-      break
+            size=(width,height)
+            
+            if save_dir is None:
+               default_save_path=self.get_default_save_path()
+               warnings.warn(f'No directory was specified for saving results.Results are saved to default path: {default_save_path}')
+               result = cv2.VideoWriter(default_save_path,  
+                        cv2.VideoWriter_fourcc(*'MJPG'), 
+                        10, size)
+               
+            elif save_dir is not None:
+               if os.path.exists(save_dir):
+                  files_in_dir=os.listdir(save_dir)
+                  path=os.path.join(save_dir,f'Results_{len(files_in_dir)+1}.avi')
+                  result = cv2.VideoWriter(path,  
+                        cv2.VideoWriter_fourcc(*'MJPG'), 
+                        10, size)
+               else:
+                  raise(f'Provided path:{save_dir} does not exist')
+         
+      while True:
+
+         ret, frame = cap.read()   
+         
+         if not ret:
+            print("Can't receive frame (stream end?) and end of frame reached. Exiting ...")
+            break
+         
+         if use_slicer:
+            
+            detections=self.InferenceSlicer(model,frame)
+         
+         detections=self.model.predict(frame)[0]
+      
+         detections = sv.Detections.from_ultralytics(detections)
+
+         if track:   
+                 
+            if track and tracker is None:
+            
+               warnings.warn("The track argument was set to true and the tracker was not provide. The algorithm will use the defualt tracker 'sv.ByteTrack()' when inferencing")
+            
+               detections = tracker.update_with_detections(detections)
+               
+               
+               
+            elif track==True and tracker is not None:
+               
+               try:
+                  detections = tracker.update_with_detections(detections)
+               except:
+                  message='There is an issue with the provided tracker.You can use sv.ByteTrack()'
+               else:
+                  detections = tracker.update_with_detections(detections)
+
+            labels = [
+                        f"#{tracker_id} {model.names[class_id]}"
+                        for class_id, tracker_id
+                        in zip(detections.class_id, detections.tracker_id)
+                     ]
+         
+         labels = [
+                     f"{class_name} {confidence:.2f}"
+                     for class_name, confidence
+                     in zip(detections['class_name'], detections.confidence)
+                  ]
+
+      
+         annotated_image = self.box_annotator.annotate(
+                                          scene=frame, detections=detections)
+         annotated_image = self.label_annotator.annotate(
+                                          scene=annotated_image, detections=detections, labels=labels)
+
+         if save:
+            result.write(annotated_image)        
+         if display:
+            cv2.imshow('Video Stream',annotated_image)
+               
+         if cv2.waitKey(1) == ord('q'):
+         
+            break
    
+detector=FootBallDetect()
+detector.detect(video_path=VIDEO_PATH,
+                model=model,
+                use_slicer=False,
+                track=False,
+                save_dir=None,
+                save=True,
+                display=False)
