@@ -34,14 +34,11 @@ class FootBallDetect:
       self.detections=None
       self.video_path=None
       self.model=None
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+
       self.box_annotator = sv.EllipseAnnotator()
->>>>>>> 393aaca1e70bab608a3328571dce3cd153b663d8
-=======
+
       self.box_annotator = sv.EllipseAnnotator()
->>>>>>> 393aaca1e70bab608a3328571dce3cd153b663d8
+
       self.label_annotator = sv.LabelAnnotator()
       self.triangle_annotator = sv.TriangleAnnotator()
       self.ellipse_annotator = sv.EllipseAnnotator()
@@ -161,8 +158,7 @@ class FootBallDetect:
                               scene=frame.copy(),
                               detections=detections)
          
-<<<<<<< HEAD
-<<<<<<< HEAD
+
          annotated_frame = self.label_annotator.annotate(
                                           scene=annotated_frame, detections=detections, labels=labels)
          
@@ -174,9 +170,7 @@ class FootBallDetect:
             result.write(annotated_frame)        
          if display:
             cv2.imshow('Video Stream',annotated_frame)
-=======
-=======
->>>>>>> 393aaca1e70bab608a3328571dce3cd153b663d8
+
          annotated_image = self.label_annotator.annotate(
                                           scene=annotated_image, detections=detections, labels=labels)
          
@@ -188,10 +182,7 @@ class FootBallDetect:
             result.write(annotated_image)        
          if display:
             cv2.imshow('Video Stream',annotated_image)
-<<<<<<< HEAD
->>>>>>> 393aaca1e70bab608a3328571dce3cd153b663d8
-=======
->>>>>>> 393aaca1e70bab608a3328571dce3cd153b663d8
+
                
          if cv2.waitKey(1) == ord('q'):
          
