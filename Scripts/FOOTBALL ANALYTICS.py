@@ -12,12 +12,13 @@ import time
 import supervision as sv
 import warnings
 import os
+import torch 
 
 WEIGTH_PATH=r'Weights\FootBallAnalytics.pt'
 VIDEO_PATH=r'Videos\VILLARREAL CF 1 - 5 FC BARCELONA _ RESUMEN LALIGA EA SPORTS.mp4'
 
-
-model=YOLO(WEIGTH_PATH).to('cuda')
+device='cuda'if torch.cuda.is_available() else 'cpu'
+model=YOLO(WEIGTH_PATH).to(device)
 cap = cv2.VideoCapture(VIDEO_PATH)
 
 text="{}"
