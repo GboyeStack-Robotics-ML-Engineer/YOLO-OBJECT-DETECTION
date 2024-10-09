@@ -17,6 +17,7 @@ import torch
 WEIGTH_PATH=r'Weights\YoloV8CarDetection.pt'
 VIDEO_PATH=r'Videos\Cars Moving On Road Stock Footage - Free Download.mp4'
 
+
 device='cuda'if torch.cuda.is_available() else 'cpu'
 model=YOLO(WEIGTH_PATH).to(device)
 cap = cv2.VideoCapture(VIDEO_PATH)

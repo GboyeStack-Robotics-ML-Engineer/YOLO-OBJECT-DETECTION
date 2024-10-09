@@ -112,6 +112,7 @@ class FootBallDetect:
          ret, frame = cap.read()   
          
          if not ret:
+            
             print("Can't receive frame (stream end?) and end of frame reached. Exiting ...")
             break
          
@@ -165,23 +166,12 @@ class FootBallDetect:
          annotated_frame = self.ellipse_annotator.annotate(
                                           scene=annotated_frame,
                                           detections=detections)
+
          
          if save:
             result.write(annotated_frame)        
          if display:
             cv2.imshow('Video Stream',annotated_frame)
-
-         annotated_image = self.label_annotator.annotate(
-                                          scene=annotated_image, detections=detections, labels=labels)
-         
-         annotated_frame = self.ellipse_annotator.annotate(
-                                          scene=annotated_image,
-                                          detections=detections)
-         
-         if save:
-            result.write(annotated_image)        
-         if display:
-            cv2.imshow('Video Stream',annotated_image)
 
                
          if cv2.waitKey(1) == ord('q'):
@@ -195,4 +185,4 @@ detector.detect(video_path=VIDEO_PATH,
                 track=False,
                 save_dir=None,
                 save=True,
-                display=False)
+                display=True)
